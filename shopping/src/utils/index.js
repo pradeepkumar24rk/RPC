@@ -2,8 +2,8 @@ const { default: axios } = require("axios");
 const { EXCHANGE_NAME, MESSAGE_BROKER_URL, QUEUE_NAME } = require("../config");
 const amqplib = require("amqplib");
 const jwt = require("jsonwebtoken");
-const { APP_SECRET } = require("../config");
 const { v4: uuidv4 } = require("uuid");
+const { APP_SECRET } = require("../config");
 
 module.exports.ValidateToken = async (req) => {
   const signature = req.get("Authorization");

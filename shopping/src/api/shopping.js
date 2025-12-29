@@ -8,7 +8,7 @@ module.exports = (app, channel) => {
 
   SubscribeMessage(channel, service, SHOPPING_BINDING_KEY);
 
-//cart
+  //cart
   app.get("/cart", userAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
@@ -18,27 +18,34 @@ module.exports = (app, channel) => {
       next(error);
     }
   });
-  
-  app.post("/cart",userAuth, async (req, res, next) => {
-    
-  })
-  
-//order
+
+  app.post("/cart", userAuth, async (req, res, next) => {
+    try {
+      const { _id } = req.user;
+      const { productId, qty } = req.body;
+      const data = await service.AddToCart(_id, productId, qty);
+      return res.status(200).json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  //order
   app.post("/order", userAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
       const { txnNumber } = req.body;
-      const data  = await service.CreateOrder({ _id, txnNumber });
+      const data = await service.CreateOrder({ _id, txnNumber });
       console.log("order data", data);
       const payload = await service.GetOrderPayload(_id, data, "CREATE_ORDER");
-      console.log("payload",payload);
+      console.log("payload", payload);
       PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(payload));
       return res.status(200).json(data);
     } catch (error) {
       next(error);
     }
   });
-  
+
   app.get("/orders", userAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
@@ -48,9 +55,9 @@ module.exports = (app, channel) => {
       next(error);
     }
   });
-  
-//wishlist
-  app.get("/wishlist", userAuth, async (req, res,next) => {
+
+  //wishlist
+  app.get("/wishlist", userAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
       const data = await service.GetWishList(_id);
@@ -59,18 +66,18 @@ module.exports = (app, channel) => {
       next(error);
     }
   });
-  
-  app.get("/wishlist", userAuth, async (req, res,next) => {
+
+  app.get("/wishlist", userAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
-      const {productId} = req.body;
-      const data = await service.AddToWishList(_id,productId);
+      const { productId } = req.body;
+      const data = await service.AddToWishList(_id, productId);
       return res.status(200).json(data);
     } catch (error) {
       next(error);
     }
   });
-  
+
   app.get("/whoami", (req, res) => {
     return res.status(200).json({
       msg: "/shopping: I am product",

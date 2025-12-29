@@ -1,4 +1,4 @@
-const { CartModel, OrderModel } = require("../models");
+const { CartModel, OrderModel, WishListModel } = require("../models");
 
 class ShoppingRepository {
   async AddToCartItem(customerId, item, qty, isRemove) {
@@ -82,10 +82,10 @@ class ShoppingRepository {
   }
   
    async GetWishList(customerId) {
-    const profile = await CustomerModel.findById(customerId).populate(
-      "wishlist"
+    const wishList = await WishListModel.findOne({customerId}).populate(
+      "products"
     );
-    return profile.wishlist;
+    return wishList;
   }
 
   async AddToWishList(
@@ -96,12 +96,10 @@ class ShoppingRepository {
       _id: productId,
     };
 
-    const profile = await CustomerModel.findById(customerId).populate(
-      "wishlist"
-    );
+    const profile = await WishListModel.findOne({customerId});
 
     if (profile) {
-      let wishlist = profile.wishlist;
+      let wishlist = profile.products;
 
       if (wishlist.length > 0) {
         let isExist = false;
@@ -122,6 +120,12 @@ class ShoppingRepository {
     }
     const profileResult = await profile.save();
     return profileResult.wishlist;
+  }
+  
+  async DeleteCartByCustomerId(customerId) {
+    await CartModel.findOneAndDelete({ customerId });
+    await WishListModel.findOneAndDelete({ customerId });
+    return { message: "Cart and Wishlist deleted successfully" };
   }
  
 }

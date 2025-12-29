@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { APP_SECRET, QUEUE_NAME, EXCHANGE_NAME, MESSAGE_BROKER_URL } = require("../config");
+const { APP_SECRET, EXCHANGE_NAME, MESSAGE_BROKER_URL } = require("../config");
 const amqplib = require("amqplib");
 
 module.exports.GenerateSalt = async () => {

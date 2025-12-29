@@ -17,6 +17,11 @@ class ProductRepository {
     return productRes
   }
   
+  async GetProducts(productIds) {
+    const products = await ProductModel.find().where("_id").in(productIds).exec();
+    return products;
+  }
+  
 }
 
 module.exports =  ProductRepository ;

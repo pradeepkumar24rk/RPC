@@ -1,12 +1,26 @@
 const { ShoppingRepository } = require("../database");
+const { RPCRequest } = require("../utils");
 
 class ShoppingServices {
   constructor() {
     this.repository = new ShoppingRepository();
   }
 
-  async AddToCart(customerId, product, qty, remove = false) {
-    return this.repository.AddToCartItem(customerId, product, qty, remove);
+  async AddToCart(customerId, productId, qty, remove = false) {
+    const productResponse = await RPCRequest("PRODUCT_RPC", {
+      type: "VIEW_PRODUCT",
+      data: productId,
+    });
+    if (productResponse && productResponse._id) {
+      const data = await this.repository.AddToCartItem(
+        customerId,
+        productResponse,
+        qty,
+        remove
+      );
+      return data;
+    }
+    throw new Error("Product not found");
   }
 
   async GetCart(customerId) {
@@ -21,36 +35,40 @@ class ShoppingServices {
     return this.repository.GetOrdersByCustomerId(customerId);
   }
 
-  async GetOrderPayload(userId, order, event) {
-    let payload = {};
-    if (order) {
-      payload = {
-        event,
-        data: { userId, order },
-      };
-      return payload;
+  async GetWishList(customerId) {
+    const wishList = this.repository.GetWishList(customerId);
+    if (!wishList) {
+      return {};
+    }
+    const { products } = wishList;
+    if (Array.isArray(products)) {
+      const ids = products.map(({ _id }) => _id);
+      const productResponse = await RPCRequest("PRODUCT_RPC", {
+        type: "VIEW_PRODUCTS",
+        data: ids,
+      });
+      if (productResponse) {
+        return productResponse;
+      }
     }
   }
-  
-  async GetWishList(customerId,productId) {
-    return this.repository.GetWishList(customerId,productId);
+
+  async AddToWishList(customerId, productId) {
+    return this.repository.AddToWishList(customerId, productId);
   }
-  
-  async AddToWishList(customerId,productId) {
-    return this.repository.AddToWishList(customerId,productId);
+
+  async DeleteCustomerData(customerId) {
+    return this.repository.DeleteCartByCustomerId(customerId);
   }
 
   async SubscribeEvents(payload) {
     payload = JSON.parse(payload);
     const { event, data } = payload;
-    const { userId, product, qty } = data;
+    const { userId } = data;
 
     switch (event) {
-      case "ADD_TO_CART":
-        this.AddToCart(userId, product, qty);
-        break;
-      case "REMOVE_FROM_CART":
-        this.AddToCart(userId, product, qty, true);
+      case "CUSTOMER_DELETED":
+        this.DeleteCustomerData(userId);
         break;
       default:
         break;

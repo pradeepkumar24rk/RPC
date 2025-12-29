@@ -13,7 +13,19 @@ class ProductServices {
     return FormData(productRes);
   }
 
- 
+  async RPCHandler(payload) {
+    const { event, data } = payload;
+    switch (event) {
+      case "VIEW_PRODUCT":
+        return this.repository.FindById(data);
+        break;
+      case "VIEW_PRODUCTS":
+        return this.repository.GetProducts(data);
+      default:
+        break;
+    }
+  }
+  
 }
 
 module.exports = ProductServices;
