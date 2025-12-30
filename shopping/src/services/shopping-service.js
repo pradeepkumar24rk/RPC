@@ -1,5 +1,6 @@
 const { ShoppingRepository } = require("../database");
 const { RPCRequest } = require("../utils");
+const { NotFoundError } = require("../utils/errors/app-errors");
 
 class ShoppingServices {
   constructor() {
@@ -8,7 +9,7 @@ class ShoppingServices {
 
   async AddToCart(customerId, productId, qty, remove = false) {
     const productResponse = await RPCRequest("PRODUCT_RPC", {
-      type: "VIEW_PRODUCT",
+      event: "VIEW_PRODUCT",
       data: productId,
     });
     if (productResponse && productResponse._id) {
@@ -24,7 +25,11 @@ class ShoppingServices {
   }
 
   async GetCart(customerId) {
-    return this.repository.GetCartByCustomerId(customerId);
+    const data = await this.repository.GetCartByCustomerId(customerId);
+    if (!data) {
+      throw new NotFoundError("Cart not found");
+    }
+    return data;
   }
 
   async CreateOrder(orderInput) {
@@ -32,25 +37,35 @@ class ShoppingServices {
   }
 
   async GetOrders(customerId) {
-    return this.repository.GetOrdersByCustomerId(customerId);
+    const data = await this.repository.GetOrdersByCustomerId(customerId);
+    if (!data) {
+      throw new NotFoundError("Orders not found");
+    }
+    return data;
   }
 
   async GetWishList(customerId) {
-    const wishList = this.repository.GetWishList(customerId);
+    const wishList = await this.repository.GetWishList(customerId);
+    // console.log(wishList);
+    
     if (!wishList) {
-      return {};
+      throw new NotFoundError("WishList not found");
     }
     const { products } = wishList;
+    
+    
     if (Array.isArray(products)) {
       const ids = products.map(({ _id }) => _id);
       const productResponse = await RPCRequest("PRODUCT_RPC", {
-        type: "VIEW_PRODUCTS",
+        event: "VIEW_PRODUCTS",
         data: ids,
       });
+      
       if (productResponse) {
         return productResponse;
       }
     }
+    return {};
   }
 
   async AddToWishList(customerId, productId) {

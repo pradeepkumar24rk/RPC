@@ -54,12 +54,16 @@ module.exports.RPCObserver = async (RPC_QUEUE_NAME, service) => {
   await channel.assertQueue(RPC_QUEUE_NAME, {
     durable: false,
   });
+  channel.prefetch(1);
   channel.consume(
     RPC_QUEUE_NAME,
     async (msg) => {
       if (msg.content) {
         const payload = JSON.parse(msg.content.toString());
+        // console.log(payload);
+        
         const response = await service.RPCHandler(payload);
+        
         channel.sendToQueue(
           msg.properties.replyTo,
           Buffer.from(JSON.stringify(response)),

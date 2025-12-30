@@ -3,6 +3,7 @@ const { PORT } = require("./config");
 const expressApp = require("./express-app");
 const { databaseConnection } = require("./database");
 const { CreateChannel } = require("./utils");
+const errorHandler = require("./utils/errors/error-handler");
 
 const StartServer = async () => {
   const app = express();
@@ -13,14 +14,8 @@ const StartServer = async () => {
 
   await expressApp(app, channel);
 
-  app.use((err, req, res, next) => {
-    const statusCode = err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    return res.status(statusCode).json({
-      message,
-    });
-  });
-
+  errorHandler(app);
+  
   app
     .listen(PORT, () => {
       console.log(`listening to port ${PORT}`);

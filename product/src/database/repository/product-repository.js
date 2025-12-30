@@ -12,13 +12,18 @@ class ProductRepository {
     return productRes
   }
   
-  async FindById(productId) {
+  async GetProductById(productId) {
     const productRes = await ProductModel.findById(productId)
     return productRes
   }
   
-  async GetProducts(productIds) {
+  async GetProductsByIds(productIds) {
     const products = await ProductModel.find().where("_id").in(productIds).exec();
+    return products;
+  }
+  
+  async GetProducts() {
+    const products = await ProductModel.find();
     return products;
   }
   

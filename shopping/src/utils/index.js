@@ -1,4 +1,3 @@
-const { default: axios } = require("axios");
 const { EXCHANGE_NAME, MESSAGE_BROKER_URL, QUEUE_NAME } = require("../config");
 const amqplib = require("amqplib");
 const jwt = require("jsonwebtoken");
@@ -68,13 +67,20 @@ module.exports.SubscribeMessage = async (channel, service, bindingKey) => {
 };
 
 const requestData = async (RPC_QUEUE_NAME, requestPayload, uuid) => {
+  
   try {
     const channel = await getChannel();
     const q = await channel.assertQueue("", { exclusive: true });
-    channel.sendToQueue(RPC_QUEUE_NAME, Buffer.from(requestPayload), {
-      replyTo: q.queue,
-      correlationId: uuid,
-    });
+    channel.sendToQueue(
+      RPC_QUEUE_NAME,
+      Buffer.from(JSON.stringify(requestPayload)),
+      {
+        replyTo: q.queue,
+        correlationId: uuid,
+      }
+    );
+    console.log("send successfully", requestPayload);
+
     return new Promise((resolve, reject) => {
       const timeOut = setTimeout(() => {
         channel.close();
@@ -85,7 +91,7 @@ const requestData = async (RPC_QUEUE_NAME, requestPayload, uuid) => {
         (msg) => {
           if (msg.properties.correlationId == uuid) {
             resolve(JSON.parse(msg.content.toString()));
-            clearTimeout(timeout);
+            clearTimeout(timeOut);
           } else {
             reject("data Not found!");
           }
@@ -96,8 +102,7 @@ const requestData = async (RPC_QUEUE_NAME, requestPayload, uuid) => {
       );
     });
   } catch (err) {
-    console.log(error);
-    return "error";
+    console.log(err);
   }
 };
 

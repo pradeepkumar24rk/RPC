@@ -76,27 +76,24 @@ class ShoppingRepository {
     await cart.save();
     return order;
   }
-  
+
   async GetOrdersByCustomerId(customerId) {
     return await OrderModel.findOne({ customerId });
   }
-  
-   async GetWishList(customerId) {
-    const wishList = await WishListModel.findOne({customerId}).populate(
+
+  async GetWishList(customerId) {
+    const wishList = await WishListModel.findOne({ customerId }).populate(
       "products"
     );
     return wishList;
   }
 
-  async AddToWishList(
-    customerId,
-    productId
-  ) {
+  async AddToWishList(customerId, productId) {
     const product = {
       _id: productId,
     };
 
-    const profile = await WishListModel.findOne({customerId});
+    const profile = await WishListModel.findOne({ customerId });
 
     if (profile) {
       let wishlist = profile.products;
@@ -117,17 +114,21 @@ class ShoppingRepository {
         wishlist.push(product);
       }
       profile.wishlist = wishlist;
+      return await profile.save();
+    } else {
+      return await WishListModel.create({
+        customerId,
+        products: [product],
+      });
     }
-    const profileResult = await profile.save();
-    return profileResult.wishlist;
   }
-  
+
   async DeleteCartByCustomerId(customerId) {
     await CartModel.findOneAndDelete({ customerId });
+    await OrderModel.deleteMany({ customerId });
     await WishListModel.findOneAndDelete({ customerId });
-    return { message: "Cart and Wishlist deleted successfully" };
+    return { message: "Cart,order and Wishlist deleted successfully" };
   }
- 
 }
 
 module.exports = ShoppingRepository;

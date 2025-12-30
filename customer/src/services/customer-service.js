@@ -57,7 +57,11 @@ class CustomerServices {
   }
   
   async GetCustomerById(customerId) {
-    return this.repository.FindCustomerById(customerId);
+    const data = await this.repository.FindCustomerById(customerId);
+    if (data===null) {
+      throw new NotFoundError("Customer not found");
+    }
+    return data
   }
 
   async deleteCustomerById(customerId) {

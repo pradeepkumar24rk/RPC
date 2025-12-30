@@ -67,7 +67,7 @@ module.exports = (app, channel) => {
     }
   });
 
-  app.get("/wishlist", userAuth, async (req, res, next) => {
+  app.post("/wishlist", userAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
       const { productId } = req.body;
